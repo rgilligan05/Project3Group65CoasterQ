@@ -68,6 +68,87 @@ public class LinkedQueue<T>
         tail = newNode;
         size++;
     }
+/**
+     * Removes and returns the front element.
+     *
+     * @return removed element
+     * @throws NoSuchElementException if the queue is empty
+     */
+    public T dequeue()
+    {
+        if (isEmpty())
+        {
+            throw new NoSuchElementException("Queue is empty.");
+        }
 
+        T result = head.data;
+        head = head.next;
+        size--;
+
+        if (isEmpty())
+        {
+            tail = null;
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the front element without removing it.
+     *
+     * @return front element
+     * @throws NoSuchElementException if the queue is empty
+     */
+    public T peek()
+    {
+        if (isEmpty())
+        {
+            throw new NoSuchElementException("Queue is empty.");
+        }
+
+        return head.data;
+    }
+
+    /**
+     * Checks whether the queue is empty.
+     *
+     * @return true if empty
+     */
+    public boolean isEmpty()
+    {
+        return size == 0;
+    }
+
+    /**
+     * Returns the number of stored elements.
+     *
+     * @return queue size
+     */
+    public int size()
+    {
+        return size;
+    }
+
+    /**
+     * An internal singly linked node.
+     *
+     * @param <T> the stored element type
+     */
+    private static class Node<T>
+    {
+        private final T data;
+        private Node<T> next;
+
+        /**
+         * Creates a node.
+         *
+         * @param data element to store
+         */
+        private Node(T data)
+        {
+            this.data = data;
+            next = null;
+        }
+    }
 }
 
