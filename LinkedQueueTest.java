@@ -1,6 +1,5 @@
 import java.util.NoSuchElementException;
-import student.TestCase;
-
+import junit.framework.TestCase;
 /**
  * Tests the bounded linked queue.
  *

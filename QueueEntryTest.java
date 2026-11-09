@@ -1,4 +1,4 @@
-import student.TestCase;
+import junit.framework.TestCase;
 
 /**
  * Tests queue visit data and abandonment.
@@ -16,7 +16,7 @@ public class QueueEntryTest extends TestCase
      */
     public void setUp()
     {
-        guest = new Guest("Ryan", 60, 150);
+        guest = new Guest("Ryan", 60, 150, 1065);
         entry = new QueueEntry(guest, 600, 1L);
     }
 

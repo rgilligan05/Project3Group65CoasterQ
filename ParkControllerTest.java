@@ -1,7 +1,8 @@
 import java.io.ByteArrayOutputStream;
+import junit.framework.TestCase;
 import java.io.PrintStream;
 import java.util.Scanner;
-import student.TestCase;
+import junit.framework.TestCase;
 
 /**
  * Tests console input handling and its effect on the park model.
