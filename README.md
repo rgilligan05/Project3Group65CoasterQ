@@ -40,6 +40,9 @@ Sample session: enter a name, height, and weight → `status` (view rides) →
 - We added a test for abandoning one entry and creating a new entry for
   the same guest. This checks that leaving a line does not mark a later
   visit as abandoned.
+-3 New fields were added to ParkModel: activeVip, activeWait, nextVisitToken. Wait is 
+recorded at dispatch, counted only when ride completes.
+-Extra constructor: Parkmodel(long, Coaster[]) to help with test cases.
 
 ### Did the model stand alone?
 
@@ -59,7 +62,10 @@ console through a snapshot.
 
 ### What doesn't work yet?
 
-//
+1. ID hasn't fully been implemented across all classes, so there's currently
+no use case for it.
+2. Main method is incomplete, and still has some bugs.
+
 
 ## Next Steps
 
@@ -71,6 +77,8 @@ console through a snapshot.
    and rejoins. Verify full lines, ride restrictions, and VIP pass usage.
 3. Check that the console handles invalid numbers, invalid ride IDs,
    incomplete commands, and end of input.
+4. Implement a linear regression class for a more accurate WaitTme Calculation, possibly
+with a python wrapper.
 
 ### Change feature
 
@@ -149,3 +157,6 @@ how the view displays information from a snapshot. ChatGPT also helped
 draft some of the queue and console code and tests. For Deliverable 4,
 we asked which classes would need to change to add the regression-based
 wait time predictor.
+
+ChatGPT was also used to help debug issues with Node references and
+implementing JUnit 4 to make test cases.

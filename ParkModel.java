@@ -124,7 +124,7 @@ public class ParkModel
                 + MAX_WEIGHT_POUNDS + " pounds.");
         }
 
-        player = new Guest(name, height, weight, player.getId());
+        player = new Guest(name, height, weight, 0);
         fastPasses = STARTING_PASSES;
         playerState = PlayerState.FREE;
     }
