@@ -12,9 +12,10 @@ to keep guests in the order they joined.
 Run `Main.java` as a Java Application in Eclipse, then interact with the
 program in the console.
 
-To run the model by itself, run `ParkModelTest.java` as a JUnit test. The
-ride completion test should register a player, join a ride, and advance time
-until the ride is completed. It calls the model directly.
+To run the model by itself, right-click `ParkModelTest.java` in Eclipse
+and select Run As: JUnit Test. `testAdvanceCompletesRide()` registers
+a player, joins a ride, advances time, and checks that the model records
+one completed ride and the correct wait statistics.
 
 To run the other tests, run `LinkedQueueTest.java`, `QueueEntryTest.java`,
 and `ParkControllerTest.java` as JUnit tests in Eclipse.
@@ -24,7 +25,22 @@ Sample session: enter a name, height, and weight → `status` (view rides) →
 `status` (view statistics) → `quit` (exit).
 
 ## Demonstration: it works
-//
+We ran `Main.java` and entered `Gus`, `abc`, and `180`. The program
+rejected the height because it must be a whole number. We entered
+`Gus`, `50`, and `180` on the second try.
+
+| Command | Result |
+| --- | --- |
+| `join 99` | Rejected the ride ID because valid IDs are 1 through 8. |
+| `join 1` | Rejected the rider because Steel Vengeance requires at least 52 inches. |
+| `join 5 vip` | Rejected the VIP request because Gemini has no VIP line. |
+| `join 5` | Joined Gemini's regular line. |
+| `join 3` | Rejected the second join because the player was already in line. |
+| `leave` | Left Gemini's line. |
+| `join 3 vip` | Joined Magnum XL-200's VIP line and used one pass. |
+| `advance` twice | Reached 10:10 AM with one completed ride and a 7-minute wait. |
+| `status | Saw we Rrode 1 ride, waited 7 minutes, and had an average wait time of 7 minutes |
+| `quit` | Exited the program. |
 
 ## Reflection
 
@@ -50,7 +66,12 @@ recorded at dispatch, counted only when ride completes.
 `ParkController` reads commands and calls the model, and `ConsoleView`
 displays the resulting `ParkSnapshot`.
 
-//
+We verified that the model runs on its own by registering a player,
+joining a VIP line, and advancing time through direct calls to
+`ParkModel`. The resulting snapshot showed one completed ride, a
+7-minute wait, and one VIP pass remaining. In the current code,
+`ParkModel` handles queue and ride rules, while `ConsoleView` handles
+console output.
 
 ### What happened to our unknowns?
 
@@ -58,13 +79,17 @@ We figured out how to use a linked queue for each line, how to represent
 separate visits for the same guest, and how to pass park state to the
 console through a snapshot.
 
-//
+We figured out how to advance the simulation and track wait times.
+The console advances five minutes per command, and the model records
+the wait when the player boards. The ride counts toward the player's
+statistics when it finishes. The current wait estimate uses the
+queue size and ride timing. The regression predictor is planned
+for Deliverable 4.
 
 ### What doesn't work yet?
 
-1. ID hasn't fully been implemented across all classes, so there's currently
-no use case for it.
-2. Main method is incomplete, and still has some bugs.
+The player is assigned ID `0`, and simulated guests currently reuse
+that same ID. Simulated guests still need unique IDs.
 
 
 ## Next Steps
@@ -122,8 +147,9 @@ Deliverable 4.
 | Finish and test ride dispatch, completion, and statistics | Mikey |
 | Verify full queues, FIFO order, and abandoned visits | Ryan and Mikey |
 | Finish console integration and test invalid input | Eyal |
-| Add weather hold state and model tests | Mikey |
-| Add weather commands, display, and input tests | Eyal |
+| Record queue lengths and actual waits, and implement the regression predictor | Mikey |
+| Test the predictor with known data, too few observations, and identical queue lengths. Verify that abandoned visits are excluded. | Ryan |
+| Add the `predict <ride ID>` command, display its result, and test invalid commands | Eyal ||
 | Verify queue order after reopening | Ryan |
 | Run the full prototype together | Everyone |
 
@@ -145,6 +171,9 @@ Deliverable 4.
 | `ParkController.java` | Eyal | Command parsing, input validation, and calls to the park model |
 | `ParkControllerTest.java` | Eyal | Tests for valid commands, invalid input, quitting, and end of input |
 | `Main.java` | Eyal | Connects the model, controller, and view to start the program |
+| `CoasterTest.java` | Mikey | Tests ride configuration, regular and VIP queues, and queue capacity. |
+| `GuestTest.java` | Mikey | Tests guest information and rejects invalid names, heights, and weights. |
+| `ParkSnapshotTest.java` | Mikey | Tests snapshot fields and verifies that snapshot lists are copied and cannot be modified. |
 
 ### GenAI note
 
