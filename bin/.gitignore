@@ -1,5 +1,12 @@
+/CoasterTest.class
+/GuestTest.class
+/LinkedQueueTest.class
+/ParkControllerTest.class
+/ParkModelTest.class
+/ParkSnapshotTest.class
 /Coaster.class
 /ConsoleView.class
+/ConsoleViewTest.class
 /Guest.class
 /LinkedQueue$Node.class
 /LinkedQueue.class
@@ -12,4 +19,3 @@
 /QueueEntry.class
 /WaitTimePredictor.class
 /WaitTimePredictorTest.class
-/ConsoleViewTest.class
