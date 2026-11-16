@@ -80,6 +80,45 @@ public class ParkController
      */
     public void handleCommand(String command)
     {
+         if (command != null)
+        {
+            String[] parts = command.trim().split("\\s+");
+
+            if (parts[0].equalsIgnoreCase("predict"))
+            {
+                if (parts.length != 2)
+                {
+                    view.displayMessage(
+                        "Enter a ride number, like predict 3.");
+                    return;
+                }
+
+                try
+                {
+                    int rideId = Integer.parseInt(parts[1]);
+                    int wait = model.predictWait(rideId);
+
+                    if (wait == -1)
+                    {
+                        view.displayMessage(
+                            "No wait estimate is available.");
+                    }
+                    else
+                    {
+                        view.displayMessage(
+                            "Estimated wait for ride " + rideId
+                                + ": " + wait + " minutes.");
+                    }
+                }
+                catch (IllegalArgumentException exception)
+                {
+                    view.displayMessage(
+                        "Please enter a valid ride number (1-8).");
+                }
+
+                return;
+            }
+        }
         if (!running)
         {
             return;

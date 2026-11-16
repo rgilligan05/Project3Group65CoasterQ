@@ -2,6 +2,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Owns the park simulation: rides, the player, the clock, random arrivals,
@@ -30,6 +32,8 @@ public class ParkModel
     private final Coaster[] coasters;
     private final Random random;
     private final int[] rideCounts;
+    private final WaitTimePredictor[] waitPredictors;
+    private final Map<QueueEntry, Integer> queueAheadAtJoin;
 
     private Guest player;
     private int currentMinute;
@@ -43,6 +47,7 @@ public class ParkModel
     private int totalWaitMinutes;
     private int lastWaitMinutes;
     private long nextVisitToken;
+    private int nextGuestId = 1;
 
     //~ Constructors ..........................................................
 
@@ -86,6 +91,14 @@ public class ParkModel
         currentMinute = OPEN_MINUTE;
         playerState = PlayerState.NOT_REGISTERED;
         nextVisitToken = 1;
+        waitPredictors = new WaitTimePredictor[coasters.length];
+
+        for (int i = 0; i < coasters.length; i++)
+            {
+                waitPredictors[i] = new WaitTimePredictor();
+            }
+
+        queueAheadAtJoin = new HashMap<QueueEntry, Integer>();
     }
 
     //~Public  Methods ........................................................
@@ -193,7 +206,18 @@ public class ParkModel
 
         QueueEntry entry = new QueueEntry(player, currentMinute,
             nextVisitToken++);
+        int peopleAhead;
 
+        if (vip)
+        {
+            peopleAhead = coaster.getVipWaiting().size();
+        }
+        else
+        {
+            peopleAhead = coaster.getStandardWaiting().size();
+        }
+        queueAheadAtJoin.put(entry, peopleAhead);
+        
         if (vip)
         {
             coaster.getVipLine().enqueue(entry);
@@ -228,6 +252,7 @@ public class ParkModel
 
         Coaster coaster = coasters[activeRideId - 1];
         activeEntry.abandon();
+        queueAheadAtJoin.remove(activeEntry);
 
         if (activeVip)
         {
@@ -319,6 +344,29 @@ public class ParkModel
             playerState.name(), fastPasses, totalRides, lastWaitMinutes,
             average, counts, rides);
     }
+    
+    /**
+     * Predicts the standard-line wait time for a coaster.
+     *
+     * @param rideId the ID of the coaster
+     * @return the predicted wait time in minutes
+     * @throws IllegalArgumentException if the ride ID is invalid
+     */
+    public int predictWait(int rideId)
+    {
+        if (rideId < 1 || rideId > coasters.length)
+        {
+            throw new IllegalArgumentException("Invalid ride ID.");
+        }
+
+        Coaster coaster = coasters[rideId - 1];
+
+        int peopleAhead = coaster.getStandardWaiting().size();
+        int fallback = estimateWait(coaster, false);
+
+        return waitPredictors[rideId - 1].predict(peopleAhead, fallback);
+    }
+
 
     //~ Private helpers .......................................................
 
@@ -392,10 +440,23 @@ public class ParkModel
             return;
         }
 
-        Guest guest = new Guest("Guest", 65, 160, player.getId());
+        Guest guest = new Guest("Guest", 65, 160, nextGuestId++);
         QueueEntry entry = new QueueEntry(guest, currentMinute,
             nextVisitToken++);
+        
+        int peopleAhead;
 
+        if (vip)
+        {
+            peopleAhead = c.getVipWaiting().size();
+        }
+        else
+        {
+            peopleAhead = c.getStandardWaiting().size();
+        }
+
+        queueAheadAtJoin.put(entry, peopleAhead);
+        
         if (vip)
         {
             c.getVipLine().enqueue(entry);
@@ -426,6 +487,7 @@ public class ParkModel
             if (entry != activeEntry && random.nextDouble() < ABANDON_CHANCE)
             {
                 entry.abandon();
+                queueAheadAtJoin.remove(entry);
                 iterator.remove();
             }
         }
@@ -446,11 +508,11 @@ public class ParkModel
         if (c.hasVip())
         {
             vipBoarded = board(c.getVipLine(), c.getVipWaiting(),
-                c.getSeatCapacity() / 2, riders);
+                c.getSeatCapacity() / 2, riders, c.getId());
         }
 
         board(c.getStandardLine(), c.getStandardWaiting(),
-            c.getSeatCapacity() - vipBoarded, riders);
+            c.getSeatCapacity() - vipBoarded, riders, c.getId());
 
         c.setNextDispatchMinute(
             c.getNextDispatchMinute() + c.getDispatchInterval());
@@ -478,10 +540,12 @@ public class ParkModel
      * @param waiting the line's active entries
      * @param limit maximum riders to board
      * @param riders the train's riders
-     * @return the number boarded
+     * @param rideId the ID of the coaster
+     * @return the number of guests boarded
      */
     private int board(LinkedQueue<QueueEntry> line,
-        List<QueueEntry> waiting, int limit, List<QueueEntry> riders)
+        List<QueueEntry> waiting, int limit,
+        List<QueueEntry> riders, int rideId)
     {
         int boarded = 0;
 
@@ -489,8 +553,19 @@ public class ParkModel
         {
             QueueEntry entry = line.dequeue();
 
+            // Get the queue length recorded when the guest joined.
+            Integer peopleAhead = queueAheadAtJoin.remove(entry);
+
             if (!entry.isAbandoned())
             {
+                // Record the actual wait time.
+                if (peopleAhead != null  && line == coasters[rideId - 1].getStandardLine())
+                {
+                    int actualWait = currentMinute - entry.getJoinedMinute();
+
+                    waitPredictors[rideId - 1].record(peopleAhead, actualWait);
+                }
+
                 waiting.remove(entry);
                 riders.add(entry);
                 boarded++;
@@ -498,7 +573,7 @@ public class ParkModel
         }
 
         return boarded;
-    }
+    }    
 
 
     /**

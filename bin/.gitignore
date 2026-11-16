@@ -11,3 +11,5 @@
 /ParkSnapshot.class
 /QueueEntry.class
 /WaitTimePredictor.class
+/WaitTimePredictorTest.class
+/ConsoleViewTest.class
