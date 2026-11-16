@@ -250,4 +250,16 @@ public class ConsoleViewTest
 
         assertEquals(once + once, printed());
     }
+    /**
+     * Tests that the prediction command appears in the menu.
+     */
+    @Test
+    public void testPredictionInMenu()
+    {
+        ConsoleView view = viewWithInput("");
+
+        view.displayMenu();
+
+        assertTrue(printed().contains("predict <ride ID>"));
+    }
 }
