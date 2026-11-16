@@ -107,7 +107,9 @@ The main simulation and prediction features have been implemented, and
 we have added and run the tests. We do not have any additional MVP
 features planned at this point. Our remaining work is to complete the
 final integration checks, address any issues that come up, and make
-sure the full program is ready for the final demonstration.
+sure the full program is ready for the final demonstration. If time allows,
+we might implement a Swing GUI to display a video of a rollercoaster when your status
+says riding.
 
 ## Next Steps
 
@@ -119,6 +121,7 @@ sure the full program is ready for the final demonstration.
    continue working correctly with the new prediction feature.
 3. Verify that invalid commands, incomplete inputs, and invalid ride
    IDs do not crash the program.
+4. Implement video with java Swing.
 
 ### Stretch goals
 
