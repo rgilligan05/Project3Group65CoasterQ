@@ -1,6 +1,6 @@
 # Project3Group65CoasterQ
 # CoasterQ — Project 3, Group 65
-CS 2114 · Deliverable 3 (First Prototype)
+CS 2114 · Deliverable 4 (Second Prototype)
 
 A console application where a player visits a roller coaster park. The player
 enters their name, height, and weight, joins a regular or VIP line, advances
@@ -15,14 +15,19 @@ program in the console.
 To run the model by itself, right-click `ParkModelTest.java` in Eclipse
 and select Run As: JUnit Test. `testAdvanceCompletesRide()` registers
 a player, joins a ride, advances time, and checks that the model records
-one completed ride and the correct wait statistics.
+one completed ride and the correct wait statistics. The new prediction
+tests check that wait estimates are calculated and invalid ride IDs
+are handled correctly.
 
 To run the other tests, run `LinkedQueueTest.java`, `QueueEntryTest.java`,
-and `ParkControllerTest.java` as JUnit tests in Eclipse.
+`GuestTest.java`, `CoasterTest.java`, `ParkSnapshotTest.java`,
+`ParkControllerTest.java`, `ConsoleViewTest.java`, and
+`WaitTimePredictorTest.java` as JUnit tests in Eclipse.
 
 Sample session: enter a name, height, and weight → `status` (view rides) →
-`join 3` (join ride 3 if eligible) → `advance` until the ride is complete →
-`status` (view statistics) → `quit` (exit).
+`predict 3` (view estimated wait time) → `join 3` (join ride 3) →
+`advance` (advance time) → `status` (view updated statistics) →
+`quit` (exit).
 
 ## Demonstration: it works
 We ran `Main.java` and entered `Gus`, `abc`, and `180`. The program
@@ -42,138 +47,136 @@ rejected the height because it must be a whole number. We entered
 | `status | Saw we Rrode 1 ride, waited 7 minutes, and had an average wait time of 7 minutes |
 | `quit` | Exited the program. |
 
+For Deliverable 4, we also added the `predict <ride ID>` command.
+Entering `predict 3` displays an estimated wait time for Magnum XL-200.
+Invalid inputs like `predict abc`, `predict 99`, and `predict` are
+handled without crashing the program.
 ## Reflection
 
-### What changed from the specification?
+### How did our design handle the change?
 
-- The spec called for a unique token for each queue visit. We used a `long`
-  and passed it into `QueueEntry(Guest, int, long)` from the model. This gives
-  a guest a separate entry each time they join a line.
-- We kept the validation split from the spec. The controller checks input
-  format, the model checks park rules, and the queue enforces its capacity.
-  We also added checks for a null guest and a negative join time in
-  `QueueEntry` so invalid visits are rejected when they are created.
-- We added a test for abandoning one entry and creating a new entry for
-  the same guest. This checks that leaving a line does not mark a later
-  visit as abandoned.
--3 New fields were added to ParkModel: activeVip, activeWait, nextVisitToken. Wait is 
-recorded at dispatch, counted only when ride completes.
--Extra constructor: Parkmodel(long, Coaster[]) to help with test cases.
+For Deliverable 4, we added the regression-based wait-time prediction
+feature that we planned in Deliverable 3. We updated `ParkModel`,
+`WaitTimePredictor`, `ParkController`, and `ConsoleView`. The model now
+records how many people were ahead of a guest when they joined a line
+and how long they actually waited before boarding. `WaitTimePredictor`
+uses these observations to estimate wait times for each coaster's
+regular line.
 
-### Did the model stand alone?
+Most of the changes matched what we predicted in Deliverable 3. We
+expected to update the model, controller, and view while keeping classes
+like `LinkedQueue`, `Guest`, and `Main` unchanged. One difference was
+that we recorded the actual wait time during boarding rather than
+directly in `advanceTime()`. We also used the existing `displayMessage()`
+method instead of creating a separate `displayPrediction()` method.
 
-`ParkModelTest` calls `ParkModel` directly. In the console version,
-`ParkController` reads commands and calls the model, and `ConsoleView`
-displays the resulting `ParkSnapshot`.
+### Did the change cross the model/view line?
 
-We verified that the model runs on its own by registering a player,
-joining a VIP line, and advancing time through direct calls to
-`ParkModel`. The resulting snapshot showed one completed ride, a
-7-minute wait, and one VIP pass remaining. In the current code,
-`ParkModel` handles queue and ride rules, while `ConsoleView` handles
-console output.
+The separation between our model, controller, and view stayed the same.
+When the user enters `predict <ride ID>`, the controller reads the
+command and calls `ParkModel.predictWait()`. The model calculates the
+prediction, and the view displays the result.
 
-### What happened to our unknowns?
+The view does not calculate wait times or store regression data. This
+made the feature easier to add because we could change the prediction
+logic without changing how the rest of the program displays information.
 
-We figured out how to use a linked queue for each line, how to represent
-separate visits for the same guest, and how to pass park state to the
-console through a snapshot.
+For future changes, organizing the commands into smaller controller
+methods could make adding new features easier without affecting the
+other parts of the program.
 
-We figured out how to advance the simulation and track wait times.
-The console advances five minutes per command, and the model records
-the wait when the player boards. The ride counts toward the player's
-statistics when it finishes. The current wait estimate uses the
-queue size and ride timing. The regression predictor is planned
-for Deliverable 4.
+### What changed from our Deliverable 3 plan?
+
+Our original plan was to display a message saying there was not enough
+data until the regression model had enough observations. Instead, we
+decided to use the existing wait-time estimate as a fallback. This
+allows the user to receive an estimate before enough data has been
+collected for regression.
+
+We also kept the prediction calculations entirely in Java rather than
+using the Python wrapper we had considered in Deliverable 3. This
+kept the feature within our existing program and avoided adding
+another dependency.
+
+We also updated `ParkModel` so simulated guests receive unique IDs
+instead of reusing the player's ID.
 
 ### What doesn't work yet?
 
-The player is assigned ID `0`, and simulated guests currently reuse
-that same ID. Simulated guests still need unique IDs.
-
+The main simulation and prediction features have been implemented, and
+we have added and run the tests. We do not have any additional MVP
+features planned at this point. Our remaining work is to complete the
+final integration checks, address any issues that come up, and make
+sure the full program is ready for the final demonstration.
 
 ## Next Steps
 
 ### What we need to finish
 
-1. Verify that a player can register, join a line, board, finish a ride,
-   and see the updated statistics.
-2. Check that the model skips an abandoned visit when a player leaves
-   and rejoins. Verify full lines, ride restrictions, and VIP pass usage.
-3. Check that the console handles invalid numbers, invalid ride IDs,
-   incomplete commands, and end of input.
-4. Implement a linear regression class for a more accurate WaitTme Calculation, possibly
-with a python wrapper.
-
-### Change feature
-
-
-We will add a regression model that predicts how long a player will
-wait for a coaster. The model will record how many guests are ahead
-when a player joins and how many minutes the player waits before
-boarding. Once there are enough observations, the player can enter
-`predict <ride ID>` to see an estimated wait for that coaster's
-regular line. Until then, the console will say there is not enough
-data to make a prediction.
-
-We expect `ParkModel.joinLine()` to record the starting queue length
-and `advanceTime()` to record the actual wait when the player boards.
-We plan to add `ParkModel.predictWait(int rideId)` and a
-`WaitTimePredictor` class to store observations and fit the regression.
-`ParkController.handleCommand()` will handle the new command, and
-`ConsoleView.displayMenu()` and a new `displayPrediction()` method
-will show the option and result. We expect the existing `LinkedQueue`
-methods, `Guest`, and `Main.main()` to work as written.
+1. Run the full test suite and verify that all model, queue, and
+   prediction tests pass.
+2. Check that ride dispatch, completion, abandonment, and VIP passes
+   continue working correctly with the new prediction feature.
+3. Verify that invalid commands, incomplete inputs, and invalid ride
+   IDs do not crash the program.
 
 ### Stretch goals
 
-We will attempt regression-based wait estimates as our change feature.
-We are dropping Swing animation and wait-dependent abandonment for
-Deliverable 4.
+We completed the regression-based wait-time predictor that we planned
+as our Deliverable 4 change feature. We are not committing to any
+additional stretch goals for the final build.
 
-### New tests needed
+We are continuing to leave out Swing animation and wait-dependent
+abandonment so we can focus on finishing and testing the current
+program.
 
-- Check that boarding records the actual wait and abandoned visits
-  do not become training observations.
-- Test predictions with known data, too few observations, and queue
-  lengths that are all the same.
-- Check that invalid ride IDs and malformed `predict` commands are
-  handled and that the console displays either the estimate or the
-  message about needing more data.
+### Three-minute demonstration
+
+| Time | What we will show |
+| --- | --- |
+| 0:00–0:30 | Run the program, register a player, and use `status` to view the rides. |
+| 0:30–1:00 | Enter `predict 3` to demonstrate the new wait-time prediction feature. |
+| 1:00–1:45 | Join a ride, advance time, and show the updated ride statistics. |
+| 1:45–2:20 | Enter invalid inputs such as `predict abc` and `join 99` to show error handling. |
+| 2:20–2:50 | Run the JUnit tests, including the queue and prediction tests. |
+| 2:50–3:00 | Briefly explain how the controller connects the view and model. |
+
 ### Who does what
 
 | Item | Owner |
 | --- | --- |
-| Finish and test ride dispatch, completion, and statistics | Mikey |
-| Verify full queues, FIFO order, and abandoned visits | Ryan and Mikey |
-| Finish console integration and test invalid input | Eyal |
-| Record queue lengths and actual waits, and implement the regression predictor | Mikey |
-| Test the predictor with known data, too few observations, and identical queue lengths. Verify that abandoned visits are excluded. | Ryan |
-| Add the `predict <ride ID>` command, display its result, and test invalid commands | Eyal ||
-| Verify queue order after reopening | Ryan |
-| Run the full prototype together | Everyone |
+| Final testing of ride dispatch, completion, and statistics | Mikey |
+| Verify full queues, FIFO order, and abandoned visits | Mikey |
+| Final testing of the wait-time predictor | Ryan |
+| Verify console integration and invalid input | Eyal |
+| Check the prediction command and its output | Ryan and Eyal |
+| Final review of queue behavior and tests | Ryan |
+| Run the complete prototype and prepare the demo | Everyone |
 
 ## Attribution
 
 
 | File | Who | Contribution |
 | --- | --- | --- |
-| `LinkedQueue.java` | Ryan | Bounded FIFO queue |
-| `LinkedQueueTest.java` | Ryan | FIFO, capacity, and empty queue tests |
-| `QueueEntry.java` | Ryan | Visit and abandonment tracking |
-| `QueueEntryTest.java` | Ryan | Visit and abandonment tests |
-| `Guest.java` | Mikey | Guest information, including name, height, and weight |
-| `Coaster.java` | Mikey | Ride settings, regular and VIP queues, and ride state |
-| `ParkModel.java` | Mikey | Registration, line rules, time advancement, ride dispatch, and statistics |
-| `ParkSnapshot.java` | Mikey | Read-only park, ride, and player information for the console |
-| `ParkModelTest.java` | Mikey | Tests for joining lines, advancing time, and completing rides |
-| `ConsoleView.java` | Eyal | Console prompts, menus, ride information, and statistics display |
-| `ParkController.java` | Eyal | Command parsing, input validation, and calls to the park model |
-| `ParkControllerTest.java` | Eyal | Tests for valid commands, invalid input, quitting, and end of input |
-| `Main.java` | Eyal | Connects the model, controller, and view to start the program |
-| `CoasterTest.java` | Mikey | Tests ride configuration, regular and VIP queues, and queue capacity. |
-| `GuestTest.java` | Mikey | Tests guest information and rejects invalid names, heights, and weights. |
-| `ParkSnapshotTest.java` | Mikey | Tests snapshot fields and verifies that snapshot lists are copied and cannot be modified. |
+| `LinkedQueue.java` | Ryan | Wrote the bounded FIFO queue |
+| `LinkedQueueTest.java` | Ryan | Wrote FIFO, capacity, empty queue, and interleaved operation tests |
+| `QueueEntry.java` | Ryan | Wrote queue visit and abandonment tracking |
+| `QueueEntryTest.java` | Ryan | Wrote visit and abandonment tests |
+| `Guest.java` | Mikey | Wrote guest information and validation |
+| `GuestTest.java` | Mikey | Wrote tests for guest information and invalid inputs |
+| `Coaster.java` | Mikey | Wrote ride configuration, queues, and ride state |
+| `CoasterTest.java` | Mikey | Wrote tests for ride configuration and capacity |
+| `ParkModel.java` | Mikey, Ryan | Mikey wrote the main simulation; Ryan revised it for wait-time prediction |
+| `ParkModelTest.java` | Mikey, Ryan | Tested model functionality and added prediction tests |
+| `ParkSnapshot.java` | Mikey | Wrote the read-only park and player snapshot |
+| `ParkSnapshotTest.java` | Mikey | Wrote tests for snapshot fields and copied lists |
+| `WaitTimePredictor.java` | Ryan | Developed the regression-based wait-time prediction feature |
+| `WaitTimePredictorTest.java` | Ryan | Added regression, fallback, and invalid-input tests|
+| `ConsoleView.java` | Eyal, Ryan | Eyal wrote the console display; Ryan helped add the prediction menu option |
+| `ConsoleViewTest.java` | Eyal, Ryan | Tested console output and the prediction menu |
+| `ParkController.java` | Eyal | Eyal wrote command handling and helped integrate the prediction command |
+| `ParkControllerTest.java` | Eyal | Tested commands, invalid inputs, and prediction handling |
+| `Main.java` | Eyal | Connected the model, controller, and view to start the program |
 
 ### GenAI note
 
@@ -186,6 +189,11 @@ how the view displays information from a snapshot. ChatGPT also helped
 draft some of the queue and console code and tests. For Deliverable 4,
 we asked which classes would need to change to add the regression-based
 wait time predictor.
+
+For Deliverable 4, we used ChatGPT to help implement and test the
+regression-based wait-time predictor, identify which classes needed
+changes, troubleshoot errors, and review our tests against the project
+requirements.
 
 ChatGPT was also used to help debug issues with Node references and
 implementing JUnit 4 to make test cases.
