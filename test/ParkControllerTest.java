@@ -258,78 +258,19 @@ public class ParkControllerTest extends TestCase
         return new ParkController(model, view);
     }
     
-    /**
-     * Tests a valid prediction command.
-     */
-    public void testPredictCommand()
-    {
-        model.registerPlayer("Ryan", 60, 150);
-        ParkController controller = makeController("");
-
-        controller.handleCommand("predict 3");
-
-        assertTrue(output.toString().contains(
-            "Estimated wait for ride 3: 7 minutes."));
-
-        assertEquals(600, model.getSnapshot().currentMinute);
-    }
-
 
     /**
-     * Tests rejection of a nonnumeric prediction ride ID.
+     * Tests that the park display includes the estimated wait during a session.
      */
-    public void testPredictInvalidInput()
-    {
-        model.registerPlayer("Ryan", 60, 150);
-        ParkController controller = makeController("");
-
-        controller.handleCommand("predict abc");
-
-        assertTrue(output.toString().contains(
-            "Please enter a valid ride number"));
-
-        assertEquals(600, model.getSnapshot().currentMinute);
-    }
-
-
-    /**
-     * Tests rejection of a missing or invalid prediction ride ID.
-     */
-    public void testPredictInvalidRide()
-    {
-        model.registerPlayer("Ryan", 60, 150);
-        ParkController controller = makeController("");
-
-        controller.handleCommand("predict 99");
-
-        assertTrue(output.toString().contains(
-            "Please enter a valid ride number"));
-
-        controller.handleCommand("predict");
-
-        assertTrue(output.toString().contains(
-            "Enter a ride number, like predict 3."));
-
-        assertEquals(600, model.getSnapshot().currentMinute);
-    }
-
-
-    /**
-     * Tests using the prediction command during a full session.
-     */
-    public void testPredictDuringRun()
+    public void testWaitDisplayedDuringRun()
     {
         ParkController controller = makeController(
-            "Ryan\n60\n150\npredict 3\nquit\n");
+            "Ryan\n60\n150\nstatus\nquit\n");
 
         controller.run();
 
-        assertTrue(output.toString().contains(
-            "Estimated wait for ride 3:"));
-
-        assertTrue(output.toString().contains(
-            "Thanks for visiting"));
-
+        assertTrue(output.toString().contains("min wait"));
+        assertTrue(output.toString().contains("Thanks for visiting"));
         assertEquals(600, model.getSnapshot().currentMinute);
     }
 }

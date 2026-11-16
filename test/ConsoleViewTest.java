@@ -199,7 +199,7 @@ public class ConsoleViewTest
 
         String[] lines = printed().split(Pattern.quote(NL));
 
-        assertEquals(8, lines.length);
+        assertEquals(7, lines.length);
         assertEquals("", lines[0]);
     }
 
@@ -250,16 +250,5 @@ public class ConsoleViewTest
 
         assertEquals(once + once, printed());
     }
-    /**
-     * Tests that the prediction command appears in the menu.
-     */
-    @Test
-    public void testPredictionInMenu()
-    {
-        ConsoleView view = viewWithInput("");
 
-        view.displayMenu();
-
-        assertTrue(printed().contains("predict <ride ID>"));
-    }
 }

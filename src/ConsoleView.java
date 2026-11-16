@@ -63,7 +63,6 @@ public class ConsoleView
         output.println("advance              Advance time by five minutes");
         output.println("status               View park and player stats");
         output.println("quit                 Exit CoasterQ");
-        displayMessage("predict <ride ID> - Predict the standard wait time");
     }
 
 

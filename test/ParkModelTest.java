@@ -1511,57 +1511,6 @@ public class ParkModelTest extends TestCase
         assertTrue(ride(park, 7).eligible);
         assertTrue(ride(park, 8).eligible);
     }
-    /**
-     * Tests predicting a wait time before observations are recorded.
-     */
-    public void testPredictWait()
-    {
-        model.registerPlayer("Ryan", 60, 150);
+   
 
-        assertEquals(3, model.predictWait(1));
-        assertEquals("FREE", model.getSnapshot().playerState);
-        assertEquals(600, model.getSnapshot().currentMinute);
-    }
-
-
-    /**
-     * Tests rejection of invalid ride IDs for predictions.
-     */
-    public void testPredictWaitInvalidRide()
-    {
-        model.registerPlayer("Ryan", 60, 150);
-
-        try
-        {
-            model.predictWait(0);
-            fail("Expected IllegalArgumentException.");
-        }
-        catch (IllegalArgumentException exception)
-        {
-            assertNotNull(exception);
-        }
-
-        try
-        {
-            model.predictWait(2);
-            fail("Expected IllegalArgumentException.");
-        }
-        catch (IllegalArgumentException exception)
-        {
-            assertNotNull(exception);
-        }
-    }
-
-
-    /**
-     * Tests that predictions are unavailable near closing.
-     */
-    public void testPredictWaitNearClosing()
-    {
-        model.registerPlayer("Ryan", 60, 150);
-        model.advanceTime(599);
-
-        assertEquals(-1, model.predictWait(1));
-        assertEquals(1199, model.getSnapshot().currentMinute);
-    }
 }

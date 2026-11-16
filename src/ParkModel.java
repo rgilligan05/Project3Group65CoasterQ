@@ -321,9 +321,11 @@ public class ParkModel
         List<ParkSnapshot.RideInfo> rides =
             new ArrayList<ParkSnapshot.RideInfo>();
 
+
         for (Coaster c : coasters)
         {
             boolean vip = c.hasVip();
+        
             rides.add(new ParkSnapshot.RideInfo(
                 c.getId(),
                 c.getName(),
@@ -331,10 +333,13 @@ public class ParkModel
                 vip,
                 c.getStandardWaiting().size(),
                 vip ? c.getVipWaiting().size() : 0,
-                estimateWait(c, false),
+                waitPredictors[c.getId() - 1].predict(
+                    c.getStandardWaiting().size(),
+                    estimateWait(c, false)),
                 vip ? estimateWait(c, true) : -1,
                 c.isRunning()));
         }
+
 
         double average = totalRides == 0
             ? 0.0 : (double) totalWaitMinutes / totalRides;
@@ -345,27 +350,7 @@ public class ParkModel
             average, counts, rides);
     }
     
-    /**
-     * Predicts the standard-line wait time for a coaster.
-     *
-     * @param rideId the ID of the coaster
-     * @return the predicted wait time in minutes
-     * @throws IllegalArgumentException if the ride ID is invalid
-     */
-    public int predictWait(int rideId)
-    {
-        if (rideId < 1 || rideId > coasters.length)
-        {
-            throw new IllegalArgumentException("Invalid ride ID.");
-        }
-
-        Coaster coaster = coasters[rideId - 1];
-
-        int peopleAhead = coaster.getStandardWaiting().size();
-        int fallback = estimateWait(coaster, false);
-
-        return waitPredictors[rideId - 1].predict(peopleAhead, fallback);
-    }
+    
 
 
     //~ Private helpers .......................................................

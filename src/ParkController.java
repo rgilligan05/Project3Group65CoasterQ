@@ -73,110 +73,72 @@ public class ParkController
     }
 
 
-    /**
-     * Processes a single console command.
-     *
-     * @param command raw command text
-     */
-    public void handleCommand(String command)
-    {
-         if (command != null)
+
+        /**
+         * Processes a single console command.
+         *
+         * @param command raw command text
+         */
+        public void handleCommand(String command)
         {
-            String[] parts = command.trim().split("\\s+");
-
-            if (parts[0].equalsIgnoreCase("predict"))
+            if (!running)
             {
-                if (parts.length != 2)
-                {
-                    view.displayMessage(
-                        "Enter a ride number, like predict 3.");
-                    return;
-                }
-
-                try
-                {
-                    int rideId = Integer.parseInt(parts[1]);
-                    int wait = model.predictWait(rideId);
-
-                    if (wait == -1)
-                    {
-                        view.displayMessage(
-                            "No wait estimate is available.");
-                    }
-                    else
-                    {
-                        view.displayMessage(
-                            "Estimated wait for ride " + rideId
-                                + ": " + wait + " minutes.");
-                    }
-                }
-                catch (IllegalArgumentException exception)
-                {
-                    view.displayMessage(
-                        "Please enter a valid ride number (1-8).");
-                }
-
                 return;
             }
-        }
-        if (!running)
-        {
-            return;
-        }
-
-        if (command == null || command.trim().isEmpty())
-        {
-            view.displayMessage("Enter a command.");
-            view.displayPark(model.getSnapshot());
-            return;
-        }
-
-        String[] parts = command.trim().split("\\s+");
-        String action = parts[0].toLowerCase(Locale.ROOT);
-
-        try
-        {
-            switch (action)
+        
+            if (command == null || command.trim().isEmpty())
             {
-                case "join":
-                    joinLine(parts);
-                    break;
-
-                case "leave":
-                    requireNoArguments(parts);
-                    model.leaveLine();
-                    view.displayMessage("You left the line.");
-                    break;
-
-                case "advance":
-                    requireNoArguments(parts);
-                    model.advanceTime(STEP_MINUTES);
-                    break;
-
-                case "status":
-                    requireNoArguments(parts);
-                    break;
-
-                case "quit":
-                    requireNoArguments(parts);
-                    running = false;
-                    view.displayMessage("Thanks for visiting CoasterQ!");
-                    return;
-
-                default:
-                    throw new IllegalArgumentException(
-                        "Unknown command. Choose an option from the menu.");
+                view.displayMessage("Enter a command.");
+                view.displayPark(model.getSnapshot());
+                return;
             }
+        
+            String[] parts = command.trim().split("\\s+");
+            String action = parts[0].toLowerCase(Locale.ROOT);
+        
+            try
+            {
+                switch (action)
+                {
+                    case "join":
+                        joinLine(parts);
+                        break;
+        
+                    case "leave":
+                        requireNoArguments(parts);
+                        model.leaveLine();
+                        view.displayMessage("You left the line.");
+                        break;
+        
+                    case "advance":
+                        requireNoArguments(parts);
+                        model.advanceTime(STEP_MINUTES);
+                        break;
+        
+                    case "status":
+                        requireNoArguments(parts);
+                        break;
+        
+                    case "quit":
+                        requireNoArguments(parts);
+                        running = false;
+                        view.displayMessage("Thanks for visiting CoasterQ!");
+                        return;
+        
+                    default:
+                        throw new IllegalArgumentException(
+                            "Unknown command. Choose an option from the menu.");
+                }
+            }
+            catch (IllegalArgumentException | IllegalStateException exception)
+            {
+                view.displayMessage(exception.getMessage());
+            }
+        
+            ParkSnapshot snapshot = model.getSnapshot();
+            view.displayPark(snapshot);
+            stopIfClosed(snapshot);
         }
-        catch (IllegalArgumentException | IllegalStateException exception)
-        {
-            view.displayMessage(exception.getMessage());
-        }
-
-        ParkSnapshot snapshot = model.getSnapshot();
-        view.displayPark(snapshot);
-        stopIfClosed(snapshot);
-    }
 
 
     /**
